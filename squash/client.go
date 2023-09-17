@@ -194,12 +194,12 @@ type Reservation struct {
 }
 
 func (c *Client) Book(user, otherUser string, day, month, year, hour, min, court int) error {
-	url := "http://www.bamigrash.com/tlv/api/reservation/addReservation"
+	url := "https://www.bamigrash.com/tlv/api/reservation/addReservation"
 	inner := InnerReservation{
-		Player1:     otherUser,
-		Player2:     user,
+		Player1:     user,
+		Player2:     otherUser,
 		Hour:        fmt.Sprintf("%02d:%02d", hour, min),
-		Date:        fmt.Sprintf("%d-%02d-%02d", year, month, day),
+		Date:        fmt.Sprintf("20%02d-%02d-%02d", year, month, day),
 		CourtNumber: court,
 	}
 	innerTxt, err := json.Marshal(inner)
@@ -224,9 +224,17 @@ func (c *Client) Book(user, otherUser string, day, month, year, hour, min, court
 	if err != nil {
 		return err
 	}
-	log.Println("Booked successfully, details:", res)
 	if res.StatusCode >= 300 {
-		return errors.New(fmt.Sprintf("Failed booking: %s", res.Status))
+		errBodyStr := ""
+		if res.Body != nil {
+			errBody, err := io.ReadAll(res.Body)
+			if err != nil {
+				errBodyStr = ""
+			}
+			errBodyStr = string(errBody)
+		}
+		return errors.New(fmt.Sprintf("Failed booking: %s, %s", res.Status, errBodyStr))
 	}
+	log.Println("Booked successfully, details:", res)
 	return nil
 }
