@@ -111,19 +111,26 @@ func (a AvailableCourts) Telegram() string {
 	if len(a) == 0 {
 		return "No courts available"
 	}
-	av := map[string]struct{}{}
+	av := map[string][]int{}
 	hours := make([]string, 0, 10)
 	for _, records := range a {
 		for _, record := range records {
-			if _, ok := av[record.Hour]; ok {
+			_, ok := av[record.Hour]
+			av[record.Hour] = append(av[record.Hour], record.CourtNumber)
+			sort.Ints(av[record.Hour])
+			if ok {
 				continue
 			}
-			av[record.Hour] = struct{}{}
 			hours = append(hours, record.Hour)
+
 		}
 	}
 	sort.Strings(hours)
-	res := strings.Join(append([]string{"Courts are available at:"}, hours...), "\n")
+	hoursAndCourts := make([]string, 0, len(hours))
+	for _, hour := range hours {
+		hoursAndCourts = append(hoursAndCourts, fmt.Sprintf("%s (%v)", hour, av[hour]))
+	}
+	res := strings.Join(append([]string{"Courts are available at:"}, hoursAndCourts...), "\n")
 	return res
 }
 
@@ -206,7 +213,6 @@ func (c *Client) Book(user, otherUser string, day, month, year, hour, min, court
 	if err != nil {
 		return err
 	}
-	fmt.Println("EEEEEEEELAD", string(data))
 	header := http.Header{}
 	header.Add("Content-Type", "application/json;charset=UTF-8")
 	httpReq, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(data))
