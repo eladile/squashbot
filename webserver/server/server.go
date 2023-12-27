@@ -18,6 +18,17 @@ var (
 	listCourtRegex = mustCompile(".*courts.*available.*|.*available.*courts.*|.*any.*courts.*")
 	aliveRegex     = mustCompile(".*are you alive.*")
 	bookRegex      = mustCompile(".*book.*court.*at.*")
+	helpRegex      = mustCompile(".*help.*")
+)
+
+const (
+	helpText = `Hi there! these are the questions I will ask:
+1) any courts at dd/mm/yy? - prints availabel courts
+2) book court at dd/mm/yy HH:MM - will book a court at the specified time, will try to book courts by the order 4 to 1
+3) are you alive? - will test if the server is alive
+4) help - prints this message
+
+enjoy!`
 )
 
 func mustCompile(s string) *regexp.Regexp {
@@ -49,6 +60,7 @@ func NewServer(telegram telegram.Client, loginurl, username, password, username2
 		listCourtRegex: s.handleAvailableCourts,
 		aliveRegex:     s.handleAliveRequest,
 		bookRegex:      s.handleBookRequest,
+		helpRegex:      s.handleHelpRequest,
 	}
 	return &s
 }
@@ -212,5 +224,15 @@ func (s *Server) handleBookRequest(id string, text string) (err error) {
 		return err
 	}
 	_ = s.TelegramClient.SendMessage(id, fmt.Sprintf("Booked court #%d at %2d/%2d/%2d %2d:%2d, other user (%s) needs to approve", chosenCourt, day, month, year, min, hour, s.Username2))
+	return nil
+}
+
+func (s *Server) handleHelpRequest(id string, text string) (err error) {
+	defer func() {
+		if err != nil {
+			_ = s.TelegramClient.SendMessage(id, fmt.Sprintf("erorr occured while getting help: %s", err.Error()))
+		}
+	}()
+	_ = s.TelegramClient.SendMessage(id, helpText)
 	return nil
 }
