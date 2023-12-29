@@ -23,7 +23,7 @@ var (
 
 const (
 	helpText = `Hi there! these are the questions I will ask:
-1) any courts at dd/mm/yy? - prints availabel courts
+1) any courts at dd/mm/yy? - prints available courts
 2) book court at dd/mm/yy HH:MM - will book a court at the specified time, will try to book courts by the order 4 to 1
 3) are you alive? - will test if the server is alive
 4) help - prints this message
